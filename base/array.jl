@@ -215,7 +215,18 @@ _similar_for(c, T, itr, isz) = similar(c, T)
 
 Return an array of type `Array{element_type,1}` of all items in a collection.
 """
-collect{T}(::Type{T}, itr) = collect(Generator(T, itr))
+collect{T}(::Type{T}, itr) = _collect(T, itr, iteratorsize(itr))
+
+_collect{T}(::Type{T}, itr, isz::Union{HasLength,HasShape}) =
+    copy!(_similar_for(1:1 #= Array =#, T, itr, isz), itr)
+
+function _collect{T}(::Type{T}, itr, isz::SizeUnknown)
+    a = _similar_for(1:1 #= Array =#, T, itr, isz)
+    for x in itr
+        push!(a,x)
+    end
+    return a
+end
 
 """
     collect(collection)
