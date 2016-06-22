@@ -528,26 +528,17 @@ end
 macro vectorize_1arg(S,f)
     S = esc(S); f = esc(f); T = esc(:T)
     quote
-        ($f){$T<:$S}(x::AbstractArray{$T,1}) = [ ($f)(elem) for elem in x ]
-        ($f){$T<:$S}(x::AbstractArray{$T,2}) =
-            [ ($f)(x[i,j]) for i=1:size(x,1), j=1:size(x,2) ]
-        ($f){$T<:$S}(x::AbstractArray{$T}) =
-            reshape([ ($f)(y) for y in x ], size(x))
+        ($f){$T<:$S}(x::AbstractArray{$T}) = [ ($f)(elem) for elem in x ]
     end
 end
 
 macro vectorize_2arg(S,f)
     S = esc(S); f = esc(f); T1 = esc(:T1); T2 = esc(:T2)
     quote
-        ($f){$T1<:$S, $T2<:$S}(x::($T1), y::AbstractArray{$T2}) =
-            reshape([ ($f)(x, z) for z in y ], size(y))
-        ($f){$T1<:$S, $T2<:$S}(x::AbstractArray{$T1}, y::($T2)) =
-            reshape([ ($f)(z, y) for z in x ], size(x))
-
-        function ($f){$T1<:$S, $T2<:$S}(x::AbstractArray{$T1}, y::AbstractArray{$T2})
-            shp = promote_shape(size(x),size(y))
-            reshape([ ($f)(xx, yy) for (xx, yy) in zip(x, y) ], shp)
-        end
+        ($f){$T1<:$S, $T2<:$S}(x::($T1), y::AbstractArray{$T2}) = [ ($f)(x, z) for z in y ]
+        ($f){$T1<:$S, $T2<:$S}(x::AbstractArray{$T1}, y::($T2)) = [ ($f)(z, y) for z in x ]
+        ($f){$T1<:$S, $T2<:$S}(x::AbstractArray{$T1}, y::AbstractArray{$T2}) =
+            [ ($f)(xx, yy) for (xx, yy) in zip(x, y) ]
     end
 end
 
